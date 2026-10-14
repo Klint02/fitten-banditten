@@ -1,0 +1,8 @@
+User page
+   -  PR and stable PR
+Exercises (tag based)
+    - add new exercises
+    - add new result
+    - set muscle group/tag for exercises
+Leaderboard
+last result (rep goal met?)
