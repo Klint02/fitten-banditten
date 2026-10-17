@@ -28,7 +28,7 @@ int main(int, char**){
     std::map<std::string, std::string> page_contents;
 
     loadPages(statics_path,  page_contents);
-    pages(svr, page_contents);
+    pages(svr, page_contents, db);
     api(svr, page_contents, db);
 
     std::cout << "hmmm" << std::endl;

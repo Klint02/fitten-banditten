@@ -22,11 +22,7 @@ file(GLOB files CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/config_defaults/*")
 
 foreach(file IN LISTS files)
     get_filename_component(filename "${file}" NAME)
-    configure_file(
-        "${file}"
-        "${CONFIG_DIR}/${filename}"
-        @ONLY
-    )
+    file(COPY "${file}" DESTINATION "${CONFIG_DIR}")
 endforeach()
 
 file(GLOB files CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/static/*")

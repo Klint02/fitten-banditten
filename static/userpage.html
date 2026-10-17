@@ -13,5 +13,18 @@
             <a>Leaderboard</a>
             <a>Reporter</a>
         </dialog>
+        <form action="/add/exercise" method="post" enctype="multipart/form-data">
+            <label for="exercise">Exercise:</label><br>
+            <input type="text" id="exercise" name="exercise" required><br>
+
+            <input type="radio" id="etype1" name="etype" value="0" checked="checked">
+            <label for="etype1">Strength</label><br>
+            
+            <input type="radio" id="etype2" name="etype" value="1">
+            <label for="etype2">Cardio</label><br> 
+        </form>
+        <form action="/submit/exercise">
+            {}
+        </form>
     </body>
 </html>
