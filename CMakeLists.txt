@@ -14,6 +14,8 @@ FetchContent_MakeAvailable(cpp-httplib)
 
 find_package(SQLite3)
 
+find_package(OpenSSL)
+
 set(CONFIG_DIR $ENV{HOME}/.config/${CMAKE_PROJECT_NAME})
 
 make_directory($CONFIG_DIR)

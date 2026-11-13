@@ -1,28 +1,52 @@
 #include "httplib.h"
 #include "sqlite3.h"
 #include "../libs/internals/sqlite_wrapper.hpp"
+#include "../libs/internals/internals.hpp"
 #include <string>
 #include "api.hpp"
 
 void api(httplib::Server &svr, std::map<std::string, std::string>& page_contents, internals::sqlite_wrapper::sqliteDB &db) {
 
+    svr.Post("/auth/user", [&](const httplib::Request &req, httplib::Response &res) {
+        auto result = internals::sqlite_wrapper::sqlite3_table_t();
+
+        std::string username = req.form.get_field("username");
+        std::string password = req.form.get_field("password"); //TODO: Implement password hashes
+
+        std::string hash = SHA512hashPassword(username + password);
+
+
+        db.exec(std::format("SELECT USERNAME FROM users WHERE USERNAME IS \"{}\" AND PASSWORD_HASH IS \"{}\";", username, hash), result);
+
+        if (result["USERNAME"].size() == 0) {
+            res.set_content(std::vformat(page_contents["redirect"], std::make_format_args("/")), "text/html");
+        } 
+        std::cout << "USERNAME : " << result["USERNAME"].at(0) << std::endl; 
+        //NOTE: Path is set to "/" so we can access the user across all paths
+        res.set_header("Set-Cookie", "User=" + username + "; Path=/");
+        res.set_content(std::vformat(page_contents["redirect"], std::make_format_args("/")), "text/html");
+    });
+
     svr.Post("/add/user", [&](const auto& req, auto& res) {
-        std::string username = req.get_param_value("username");
-        std::string password = req.get_param_value("password");
+        std::string username = req.form.get_field("username");
+        std::string password = req.form.get_field("password");
+        
+        std::string hash = SHA512hashPassword(username + password);
 
-        // Check existence
-        if (req.has_param("username")) {
-            username = req.get_param_value("username");
+        //Safety so password isn't in memory anymore 
+        password = "";
+        
+        if (username.size() == 0 && password.size() != 0) {
+            res.set_content(std::vformat(page_contents["redirect"], std::make_format_args("/signup")), "text/html");
+        } else {
+            //TODO(NKC): use wildcard insert in the future
+            std::string stmt = std::format("INSERT INTO users (USERNAME, PASSWORD_HASH) VALUES('{}', '{}');", username, hash);
+            std::cout << stmt << std::endl;
+            db.exec(stmt);
+            res.set_content(std::vformat(page_contents["redirect"], std::make_format_args("/")), "text/html");
         }
 
-        if (req.has_param("password")) {
-            password = req.get_param_value("password");
-        }
-
-        //TODO(NKC): use wildcard insert in the future
-        std::string stmt = std::format("INSERT INTO users (USERNAME, PASSWORD_HASH) VALUES('{}', '{}');", username, password);
-        std::cout << stmt << std::endl;
-        db.exec(stmt);
+        
     });
     
     svr.Post("/add/exercise", [&](const auto& req, auto& res) {

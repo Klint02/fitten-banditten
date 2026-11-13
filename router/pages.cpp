@@ -12,6 +12,7 @@ void pages(httplib::Server &svr, std::map<std::string, std::string>& page_conten
         auto result = internals::sqlite_wrapper::sqlite3_table_t();
 
         std::map<std::string, std::string> cookies;
+        std::cout << req.get_header_value("Cookie") << std::endl;
         getCookiesFromHeader(req.get_header_value("Cookie"), cookies);
         if (cookies.contains("User")) {
             db.exec("SELECT * FROM exercise ORDER BY TYPE", result);
@@ -28,22 +29,12 @@ void pages(httplib::Server &svr, std::map<std::string, std::string>& page_conten
             } 
             res.set_content(std::vformat(page_contents["userpage"], std::make_format_args(cookies.at("User"), exercises_html)), "text/html");
         } else {
-            res.set_content(page_contents["login"], "text/html");
+            res.set_content(std::vformat(page_contents["login-signup"], std::make_format_args("auth/user")), "text/html");
         }
     });
     
-    svr.Post("/login", [&](const httplib::Request &req, httplib::Response &res) {
-        auto result = internals::sqlite_wrapper::sqlite3_table_t();
-
-        std::string username = req.form.get_field("username");
-        db.exec(std::format("SELECT * FROM users WHERE USERNAME IS \"{}\";", username), result);
-
-        if (result["USERNAME"].size() == 0) {
-            res.set_content(std::vformat(page_contents["redirect"], std::make_format_args("/")), "text/html");
-        } 
-        std::cout << "USERNAME : " << result["USERNAME"].at(0) << std::endl; 
-        res.set_header("Set-Cookie", "User=" + username);
-        res.set_content(std::vformat(page_contents["redirect"], std::make_format_args("/")), "text/html");
+    svr.Get("/signup", [&](const httplib::Request &req, httplib::Response &res) {
+        res.set_content(std::vformat(page_contents["login-signup"], std::make_format_args("add/user")), "text/html");
     });
 
     svr.Get("/exercise/page", [&](const httplib::Request &req, httplib::Response &res) {
@@ -54,7 +45,7 @@ void pages(httplib::Server &svr, std::map<std::string, std::string>& page_conten
 
 void loadPages(const std::string& base_path, std::map<std::string, std::string>& page_contents) {
 
-    std::vector<std::string> pages = {"userpage", "login", "redirect", "exercise-add"};
+    std::vector<std::string> pages = {"userpage", "login-signup", "redirect", "exercise-add"};
 
     for (const auto& page : pages) {
 

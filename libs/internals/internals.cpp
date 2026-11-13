@@ -1,6 +1,7 @@
 #include <string>
 #include <map>
 #include <iostream>
+#include <openssl/evp.h>
 #include "internals.hpp"
 
 
@@ -30,4 +31,28 @@ void getCookiesFromHeader(const std::string &header, std::map<std::string, std::
     for (const auto& [key, val] : cookies) {
         std::cout << key << " : " << val << std::endl;
     }
+}
+
+std::string SHA512hashPassword(const std::string &password) {
+    unsigned char buffer[EVP_MAX_MD_SIZE];
+    size_t digest_len = 0;
+    // int EVP_Q_digest(OSSL_LIB_CTX *libctx, const char *name, const char *propq, const void *data, size_t datalen, unsigned char *md, size_t *mdlen);
+    
+    if (EVP_Q_digest(nullptr,"SHA512", nullptr, password.data(), password.size(), buffer, &digest_len) != 1) {
+        std::cerr << "Password hashing failed" << std::endl;
+    }
+    
+    constexpr char digits[] = "0123456789abcdef";
+
+    std::span<const unsigned char> digest_span{buffer, digest_len};
+    std::string result;
+    result.reserve(digest_span.size() * 2);
+
+    for (unsigned char byte : digest_span) {
+        result.push_back(digits[byte >> 4]);
+        result.push_back(digits[byte & 0x0f]);
+    }
+
+    return result;
+
 }
